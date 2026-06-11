@@ -1,6 +1,7 @@
 import json
 import hashlib
 import os
+import uuid
 from dataclasses import dataclass
 from io import BytesIO
 from logging import Logger
@@ -26,11 +27,13 @@ class FileService:
     Knows nothing about rendering internals.
     """
 
-    def __init__(self, logger: Logger, template_storage: TemplateStorage, cache_dir="cache"):
+    def __init__(self, logger: Logger, template_storage: TemplateStorage, cache_dir="cache", result_dir="result"):
         self.template_storage = template_storage
         self.cache_dir = cache_dir
+        self.result_dir = result_dir
         self.logger = logger
         os.makedirs(self.cache_dir, exist_ok=True)
+        os.makedirs(self.result_dir, exist_ok=True)
 
     async def _get_hash(self, tpl_name: str, req: DataRequest) -> str:
         template_fingerprint = await self.template_storage.get_fingerprint(tpl_name)
@@ -102,3 +105,18 @@ class FileService:
             except Exception as e:
                 self.logger.error(f"Failed to delete {filename}: {e}")
         return count
+
+    async def create_new_task_result_dir(self, task_id:uuid.UUID, tpl_name: str) -> None:
+        if not await self.template_storage.exists(tpl_name):
+            raise SFileNotFoundError(tpl_name)
+        os.makedirs(os.path.join(self.result_dir, str(task_id)))
+
+    async def get_result_file_path(self, task_id: uuid.UUID) -> str:
+        """
+        Return the path to the rendered result file for a task.
+        Raises SFileNotFoundError if the file doesn't exist (e.g. task not done yet).
+        """
+        path = os.path.join(self.result_dir, str(task_id), "result.docx")
+        if not os.path.exists(path):
+            raise SFileNotFoundError(str(task_id))
+        return path

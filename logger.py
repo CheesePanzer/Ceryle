@@ -1,7 +1,8 @@
 import os
 import sys
 import logging
-from logging.handlers import TimedRotatingFileHandler
+
+from concurrent_log_handler import ConcurrentTimedRotatingFileHandler
 
 import settings
 
@@ -9,7 +10,7 @@ LOG_DIR = "logs"
 if not os.path.exists(LOG_DIR):
     os.makedirs(LOG_DIR)
 
-time_handler = TimedRotatingFileHandler(
+time_handler = ConcurrentTimedRotatingFileHandler(
     filename=os.path.join(LOG_DIR, "app.log"),
     when="midnight",
     interval=1,

@@ -1,0 +1,19 @@
+<!-- admin_templates/error.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Error</title>
+  <style>
+    body { font-family: sans-serif; max-width: 500px; margin: 80px auto; text-align: center; }
+    .error-box { background: #f8d7da; color: #721c24; padding: 20px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="error-box">
+    <h2>{{ title }}</h2>
+    <p>{{ detail }}</p>
+  </div>
+  <p><a href="{{ back_url }}">Go back</a></p>
+</body>
+</html>

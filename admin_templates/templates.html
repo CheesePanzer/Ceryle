@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Templates - Ceryle Management{% endblock %}
+
+{% block content %}
+<div class="grid-row">
+  <section class="card">
+    <h3>Active Templates</h3>
+    <ul class="template-list">
+      {% for t in templates %}
+      <li>
+        <span>{{ t }}</span>
+        <div class="template-actions">
+          <a href="/admin/templates/{{ t }}/download">Download</a>
+          <form class="inline-form" method="post" action="/admin/templates/{{ t }}/delete">
+            <button type="submit" class="danger">Delete</button>
+          </form>
+        </div>
+      </li>
+      {% else %}
+      <li class="empty-state">No active templates discovered on node.</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="card">
+    <h3>Upload Template</h3>
+    <form method="post" action="/admin/templates/upload" enctype="multipart/form-data">
+      <div class="upload-group">
+        <div class="file-input-wrapper">
+          <input type="file" name="file" accept=".docx" required>
+        </div>
+        <div>
+          <label class="checkbox-label">
+            <input type="checkbox" name="overwrite" value="true">
+            Overwrite if the same name exists
+          </label>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="primary">Upload Template</button>
+        </div>
+      </div>
+    </form>
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% endblock %}

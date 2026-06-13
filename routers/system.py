@@ -8,7 +8,7 @@ from settings import APP_NAME, APP_VERSION
 
 public_router = APIRouter(tags=["System"])
 
-@public_router.get("/")
+@public_router.get("/", include_in_schema=False)
 async def index():
     return RedirectResponse(url="/health")
 

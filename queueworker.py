@@ -3,6 +3,7 @@ import shutil
 import uuid
 from typing import NamedTuple
 
+import settings
 from docservice.baseclasses import DataRequest
 
 
@@ -13,7 +14,7 @@ class RenderJob(NamedTuple):
 
 
 # Module-level queue - bounded, full -> 429 at submission time
-render_queue: asyncio.Queue[RenderJob] = asyncio.Queue(maxsize=50)
+render_queue: asyncio.Queue[RenderJob] = asyncio.Queue(maxsize=settings.TASK_QUEUE_SIZE)
 
 
 async def worker(file_svc, render_svc, task_mgr, logger, task_dir: str = "result"):

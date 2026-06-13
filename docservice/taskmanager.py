@@ -150,3 +150,44 @@ class TaskManager:
             await db.execute("PRAGMA busy_timeout=5000")
             await db.execute("DELETE FROM tasks WHERE task_id=?", (str(task_id),))
             await db.commit()
+
+    async def get_task_status(self) -> dict[str, int]:
+        """
+        Get the counts of tasks in 'pending', 'running', 'done', and 'failed' statuses.
+        Note: The code checks for 'failed' as the column stores 'failed' in fail_task().
+        """
+        async with aiosqlite.connect(self.db_path) as db:
+            await db.execute("PRAGMA busy_timeout=5000")
+            async with db.execute("""
+                SELECT 
+                    SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+                    SUM(CASE WHEN status = 'running' THEN 1 ELSE 0 END) as running,
+                    SUM(CASE WHEN status = 'done' THEN 1 ELSE 0 END) as done,
+                    SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed
+                FROM tasks
+            """) as cursor:
+                row = await cursor.fetchone()
+                # If table is empty, SUM returns None. Default to 0.
+                if row:
+                    return {
+                        "pending": row[0] or 0,
+                        "running": row[1] or 0,
+                        "done": row[2] or 0,
+                        "failed": row[3] or 0
+                    }
+                return {"pending": 0, "running": 0, "done": 0, "failed": 0}
+
+    async def get_all_tasks(self) -> list[dict]:
+        """
+        【新增函数】查询并返回任务表中所有列的数据，按创建时间倒序。
+        """
+        async with aiosqlite.connect(self.db_path) as db:
+            db.row_factory = aiosqlite.Row
+            async with db.execute("""
+                SELECT task_id, template_name, status, file_name, data_hash, error, 
+                       created_at, processing_at, finish_at 
+                FROM tasks 
+                ORDER BY created_at DESC
+            """) as cursor:
+                rows = await cursor.fetchall()
+                return [dict(r) for r in rows]

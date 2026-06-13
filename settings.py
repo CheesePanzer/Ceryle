@@ -19,3 +19,5 @@ CLEAN_STUCK_PROCESSING: str = "*/10 * * * *"
 CLEAN_EXPIRED_FINISHED: str = "0 3 * * *"
 
 SESSION_SECRET: str = "syh123456"
+
+SESSION_MAX_AGE_SECS: int | None = None

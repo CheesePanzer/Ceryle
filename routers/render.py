@@ -9,13 +9,13 @@ from middlewares import verify_api_key
 from queueworker import RenderJob, render_queue
 from responsebuilder import ResponseBuilder
 
-protected_router = APIRouter(
+render_router = APIRouter(
     prefix="/api/v1",
     dependencies=[Depends(verify_api_key)],
     tags=["Render"]
 )
 
-@protected_router.post("/generate/{template_name}", summary="To Render the Data into that template")
+@render_router.post("/generate/{template_name}", summary="Render Data Synchronously")
 async def generate_docx(template_name: str, req: DataRequest):
     res = await file_svc.prepare_generation(template_name, req)
 
@@ -36,7 +36,7 @@ async def generate_docx(template_name: str, req: DataRequest):
         res.data_hash,
         False)
 
-@protected_router.post("/task/{template_name}", summary="Create a task of rendering a template")
+@render_router.post("/task/{template_name}", summary="Create a task of rendering a template")
 async def create_render_task(template_name: str, req: DataRequest) -> str:
     task_id = uuid.uuid4()
     await task_mgr.create_task(task_id, template_name, req.expectName)
@@ -51,7 +51,7 @@ async def create_render_task(template_name: str, req: DataRequest) -> str:
         raise
     return str(task_id)
 
-@protected_router.get("/task/file/{task_id}", summary="Download the rendered file for a task")
+@render_router.get("/task/file/{task_id}", summary="Download the rendered file of a task")
 async def get_result_file(task_id: uuid.UUID):
     task = await task_mgr.get_task(task_id)
     if task is None:

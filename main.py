@@ -16,8 +16,9 @@ from docservice.cronjobs import (
 from logger import logger
 from middlewares import universal_exception_handler
 from queueworker import worker
-from routers.admin import admin_auth_router, mgt_protected_router
-from routers.render import protected_router
+from routers.admin import admin_auth_router, admin_mgt_router
+from routers.management import management_router
+from routers.render import render_router
 from routers.system import public_router
 from settings import APP_NAME, APP_VERSION, APP_ENV
 from settings import WORKER_COUNT, CLEAN_CACHE_CRON, CLEAN_STUCK_PENDING, CLEAN_STUCK_PROCESSING, CLEAN_EXPIRED_FINISHED
@@ -61,13 +62,17 @@ app = FastAPI(
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET)
+app.add_middleware(SessionMiddleware,
+                   secret_key=settings.SESSION_SECRET,
+                   max_age=settings.SESSION_MAX_AGE_SECS)
 
 app.add_exception_handler(Exception, universal_exception_handler)
 
 app.include_router(public_router)
-app.include_router(protected_router)
+app.include_router(render_router)
 
 app.include_router(admin_auth_router)
 
-app.include_router(mgt_protected_router)
+app.include_router(admin_mgt_router)
+
+app.include_router(management_router)

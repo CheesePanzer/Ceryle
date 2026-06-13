@@ -1,3 +1,4 @@
+import os
 import shutil
 
 from fastapi import APIRouter, Form, Depends, UploadFile, File
@@ -8,6 +9,7 @@ from starlette.templating import Jinja2Templates
 import settings
 from decorators import render_errors, get_flashes, flash, flash_errors
 from dependencies import admin_auth, file_svc, task_mgr
+from docservice.exceptions import SFileTypeError
 from docservice.settings import STUCK_QUEUE_SECS, STUCK_PROCESSING_SECS, RESULT_EXPIRY_SECS
 from middlewares import require_admin
 from queueworker import render_queue
@@ -90,7 +92,7 @@ async def change_password(
     return RedirectResponse("/admin", status_code=302)
 
 
-mgt_protected_router = APIRouter(
+admin_mgt_router = APIRouter(
     prefix="/admin",
     tags=["Admin"],
     dependencies=[Depends(require_admin)],
@@ -98,7 +100,7 @@ mgt_protected_router = APIRouter(
 )
 
 
-@mgt_protected_router.get("/", response_class=HTMLResponse)
+@admin_mgt_router.get("/", response_class=HTMLResponse)
 @render_errors
 async def management_dashboard(request: Request):
     config_payload = {
@@ -123,14 +125,14 @@ async def management_dashboard(request: Request):
             "flashes": get_flashes(request)
         })
 
-@mgt_protected_router.post("/cache/clear")
+@admin_mgt_router.post("/cache/clear")
 @flash_errors("/admin")
 async def clear_cache(request: Request):
     count = file_svc.clear_all_cache()
     flash(request, f"Cache Cleared: {count} Records")
     return RedirectResponse("/admin", status_code=303)
 
-@mgt_protected_router.post("/jobs/cleanup-stuck-queue")
+@admin_mgt_router.post("/jobs/cleanup-stuck-queue")
 @flash_errors("/admin")
 async def run_cleanup_stuck_queue(request: Request):
     stuck_ids = await task_mgr.get_stuck_in_queue_task_ids(STUCK_QUEUE_SECS)
@@ -140,7 +142,7 @@ async def run_cleanup_stuck_queue(request: Request):
     return RedirectResponse("/admin", status_code=303)
 
 
-@mgt_protected_router.post("/jobs/cleanup-stuck-processing")
+@admin_mgt_router.post("/jobs/cleanup-stuck-processing")
 @flash_errors("/admin")
 async def run_cleanup_stuck_processing(request: Request):
     stuck_ids = await task_mgr.get_stuck_processing_task_ids(STUCK_PROCESSING_SECS)
@@ -151,7 +153,7 @@ async def run_cleanup_stuck_processing(request: Request):
     return RedirectResponse("/admin", status_code=303)
 
 
-@mgt_protected_router.post("/jobs/cleanup-expired-results")
+@admin_mgt_router.post("/jobs/cleanup-expired-results")
 @flash_errors("/admin")
 async def run_cleanup_expired_results(request: Request):
     expired_ids = await task_mgr.get_expired_finished_task_ids(RESULT_EXPIRY_SECS)
@@ -161,7 +163,7 @@ async def run_cleanup_expired_results(request: Request):
     flash(request, f"Cleaned up {len(expired_ids)} expired tasks")
     return RedirectResponse("/admin", status_code=303)\
 
-@mgt_protected_router.get("/status")
+@admin_mgt_router.get("/status")
 async def queue_status():
 
     task_status = await task_mgr.get_task_status()
@@ -174,7 +176,7 @@ async def queue_status():
         "task_status": task_status,
         }
 
-@mgt_protected_router.get("/templates", response_class=HTMLResponse)
+@admin_mgt_router.get("/templates", response_class=HTMLResponse)
 @render_errors
 async def management_templates(request: Request):
     tpl_list = await file_svc.list_templates()
@@ -186,27 +188,30 @@ async def management_templates(request: Request):
             "flashes": get_flashes(request)
         })
 
-@mgt_protected_router.post("/templates/upload")
+@admin_mgt_router.post("/templates/upload")
 @flash_errors("/admin/templates")
 async def upload_template(
         request: Request,
         file: UploadFile = File(...),
         overwrite: bool = Form(False),
 ):
+    name, ext = os.path.splitext(file.filename)
+    if ext != ".docx":
+        raise SFileTypeError(name)
     content = await file.read()
     saved_name = await file_svc.create_or_update_template(file.filename, content, overwrite=overwrite)
     flash(request, f"Saved: {saved_name}")
     return RedirectResponse("/admin/templates", status_code=303)
 
 
-@mgt_protected_router.post("/templates/{template_name}/delete")
+@admin_mgt_router.post("/templates/{template_name}/delete")
 @flash_errors("/admin/templates")
 async def delete_template(request: Request, template_name: str):
     await file_svc.delete_template(template_name)
     flash(request, f"Deleted: {template_name}")
     return RedirectResponse("/admin/templates", status_code=303)
 
-@mgt_protected_router.get("/templates/{template_name}/download")
+@admin_mgt_router.get("/templates/{template_name}/download")
 @flash_errors("/admin/templates")
 async def download_template(request: Request, template_name: str):
     content = await file_svc.get_template_bytes(template_name)
@@ -219,7 +224,7 @@ async def download_template(request: Request, template_name: str):
         headers={"Content-Disposition": f'attachment; filename="{filename}"'}
     )
 
-@mgt_protected_router.get("/tasks")
+@admin_mgt_router.get("/tasks")
 @render_errors
 async def read_all_tasks_page(request: Request):
     all_tasks = await task_mgr.get_all_tasks()

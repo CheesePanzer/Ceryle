@@ -1,6 +1,7 @@
 import asyncio
 from contextlib import asynccontextmanager
-from apscheduler.schedulers.background import BackgroundScheduler
+
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from fastapi import FastAPI
 from starlette.middleware.sessions import SessionMiddleware
@@ -33,19 +34,31 @@ async def lifespan(app: FastAPI):
         asyncio.create_task(worker(file_svc, render_svc, task_mgr, logger))
         for _ in range(WORKER_COUNT)
     ]
-    scheduler = BackgroundScheduler()
+    scheduler = AsyncIOScheduler()
 
-    scheduler.add_job(lambda: cleanup_cache_job(file_svc, logger),
-                      CronTrigger.from_crontab(CLEAN_CACHE_CRON))
+    scheduler.add_job(
+        cleanup_cache_job,
+        CronTrigger.from_crontab(CLEAN_CACHE_CRON),
+        args=[file_svc, logger]
+    )
 
-    scheduler.add_job(lambda: asyncio.create_task(cleanup_stuck_queue_job(task_mgr, logger)),
-                      CronTrigger.from_crontab(CLEAN_STUCK_PENDING))
+    scheduler.add_job(
+        cleanup_stuck_queue_job,
+        CronTrigger.from_crontab(CLEAN_STUCK_PENDING),
+        args=[task_mgr, logger]
+    )
 
-    scheduler.add_job(lambda: asyncio.create_task(cleanup_stuck_processing_job(file_svc, task_mgr, logger)),
-                      CronTrigger.from_crontab(CLEAN_STUCK_PROCESSING))
+    scheduler.add_job(
+        cleanup_stuck_processing_job,
+        CronTrigger.from_crontab(CLEAN_STUCK_PROCESSING),
+        args=[file_svc, task_mgr, logger]
+    )
 
-    scheduler.add_job(lambda: asyncio.create_task(cleanup_expired_results_job(file_svc, task_mgr, logger)),
-                      CronTrigger.from_crontab(CLEAN_EXPIRED_FINISHED))
+    scheduler.add_job(
+        cleanup_expired_results_job,
+        CronTrigger.from_crontab(CLEAN_EXPIRED_FINISHED),
+        args=[file_svc, task_mgr, logger]
+    )
 
     scheduler.start()
     yield

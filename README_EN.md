@@ -8,7 +8,7 @@ An autonomous document rendering service built on FastAPI + docxtpl. Populates W
 ## Features
 
 - **Template Rendering**: Fills Word templates with JSON data using Jinja2 syntax to produce .docx files
-- **Image Embedding**: Supports Base64-encoded images and remote URL images with automatic fetching and embedding; image dimensions are controlled via Jinja2 filters within the template
+- **Image Embedding**: Supports Base64-encoded images and remote URL images with automatic fetching and embedding; image dimensions are controlled via Jinja2 filters within the template: {{ image_variable | img(width=x, height=y) }}
 - **Caching**: SHA-256 hash-based caching keyed on request data + template fingerprint — identical inputs hit the cache directly, avoiding redundant rendering
 - **Sync & Async Modes**: Small files can be returned synchronously; large files submit an async task and poll for pickup
 - **Template Management**: Upload, download, list, and delete templates; swappable storage backend (local filesystem / S3)
@@ -298,3 +298,8 @@ Caller → Poll GET /task/file/{task_id} → Download when ready
 ### Logging
 
 - Daily rotating log files stored under the `logs/` directory
+
+
+### Known Issues
+
+- Failing to specify image sizes using {{ image_variable | img(width=x, height=y) }} on image placeholders will result in a corrupted, unopenable .docx file.

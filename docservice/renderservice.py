@@ -27,6 +27,9 @@ class RenderService:
 
         @pass_context
         def inline_image_filter(ctx, value, width=None, height=None):
+            """
+                {{ image_variable | img(width=50, height=40) }}
+            """
             if isinstance(value, Undefined):
                 return "{{ WARNING: Picture Not Found }}"
 

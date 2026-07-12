@@ -8,6 +8,8 @@ API_KEY:str = "123456"
 
 WORKER_COUNT: int = 1
 
+PROCESS_POOL_SIZE: int = 4
+
 TASK_QUEUE_SIZE: int = 50
 
 CLEAN_CACHE_CRON: str = "0 3 * * *"

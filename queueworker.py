@@ -3,8 +3,11 @@ import shutil
 import uuid
 from typing import NamedTuple
 
+from docservice import settings as docsettings
 import settings
 from docservice.baseclasses import DataRequest
+from docservice.renderservice import RenderService
+from renderprocesspool import process_pool
 
 
 class RenderJob(NamedTuple):
@@ -16,6 +19,15 @@ class RenderJob(NamedTuple):
 # Module-level queue - bounded, full -> 429 at submission time
 render_queue: asyncio.Queue[RenderJob] = asyncio.Queue(maxsize=settings.TASK_QUEUE_SIZE)
 
+def render_doc(template_bytes, data, images):
+
+    svc = RenderService(image_fetch_timeout=docsettings.IMAGE_FETCH_TIMEOUT)
+
+    return svc.render(
+        template_bytes,
+        data,
+        images,
+    )
 
 async def worker(file_svc, render_svc, task_mgr, logger, task_dir: str = "result"):
     """
@@ -45,7 +57,17 @@ async def _process(job: RenderJob, file_svc, render_svc, task_mgr, task_dir: str
         logger.info(f"Rendering {task_id}: Cache hit")
     else:
         template_bytes = await file_svc.get_template_bytes(template_name)
-        content = render_svc.render(template_bytes, req.data, req.images)
+
+        loop = asyncio.get_running_loop()
+
+        content = await loop.run_in_executor(
+            process_pool,
+            render_doc,
+            template_bytes,
+            req.data,
+            req.images,
+        )
+
         file_svc.save_to_cache(res.cache_path, content)
         shutil.copy(res.cache_path, result_path)
         logger.info(f"Rendering {task_id}: New Render")

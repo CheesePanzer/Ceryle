@@ -300,5 +300,6 @@ Worker 协程 → 取出任务 → 渲染 → 复制结果到 /result/{task_id}/
 - 按日滚动日志文件，存储在 `logs/` 目录下
 
 ### 已知问题
-
+- File Is not a zip file 报错：docx里面没内容就报这个错
+- 必须以单进程模式运行，因为队列无法在进程间共享，从而会导致多进程下管理后台对于队列管理的相关问题
 - 如果图片占位符没有使用指定的filter： {{ image_variable | img(width=x, height=y) }}，会导致生成的docx格式损坏，从而无法打开。

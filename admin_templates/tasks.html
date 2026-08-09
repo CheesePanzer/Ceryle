@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Task Instances - Ceryle Management{% endblock %}
+
+{% block content %}
+<section class="card" style="width: 100%;">
+  <div class="card-header-actions">
+    <h3>Task Instance Registry</h3>
+    <button type="button" class="text-btn" onclick="window.location.reload()">Refresh Page</button>
+  </div>
+  
+  <div style="overflow-x: auto; margin-top: 16px;">
+    <table class="task-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.875rem;">
+      <thead>
+        <tr style="border-bottom: 2px solid var(--border-color); background: #f8fafc; color: var(--text-muted);">
+          <th style="padding: 12px 8px;">Task ID</th>
+          <th style="padding: 12px 8px;">Template Name</th>
+          <th style="padding: 12px 8px;">File Name</th>
+          <th style="padding: 12px 8px;">Status</th>
+          <th style="padding: 12px 8px;">Timestamps (Latency)</th>
+          <th style="padding: 12px 8px;">Details / Error</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for task in tasks %}
+        <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.15s;" onmouseover="this.style.backgroundColor='#f8fafc'" onmouseout="this.style.backgroundColor='transparent'">
+          <td style="padding: 12px 8px; font-family: monospace; font-size: 0.825rem; color: var(--text-muted);">
+            {{ task.task_id }}
+          </td>
+
+          <td style="padding: 12px 8px; font-weight: 500;">{{ task.template_name }}</td>
+
+          <td style="padding: 12px 8px; color: var(--text-main);">{{ task.file_name or '-' }}</td>
+
+          <td style="padding: 12px 8px;">
+            <span class="task-badge-inline {{ task.status }}" style="
+              display: inline-block;
+              padding: 2px 8px;
+              border-radius: 4px;
+              font-size: 0.75rem;
+              font-weight: 600;
+              text-transform: uppercase;
+              {% if task.status == 'pending' %} background: var(--color-pending); color: #475569;
+              {% elif task.status == 'running' %} background: #dbeafe; color: var(--color-running);
+              {% elif task.status == 'done' %} background: #dcfce7; color: var(--color-done);
+              {% elif task.status == 'failed' %} background: #fee2e2; color: var(--color-failed); {% endif %}
+            ">
+              {{ task.status }}
+            </span>
+          </td>
+
+          <td style="padding: 12px 8px; font-size: 0.8rem; line-height: 1.4; color: var(--text-muted); white-space: nowrap;">
+            <div><strong>Created:</strong> <span class="epoch-time">{{ task.created_at }}</span></div>
+            {% if task.processing_at %}
+              <div><strong>Started:</strong> <span class="epoch-time">{{ task.processing_at }}</span></div>
+            {% endif %}
+            {% if task.finish_at %}
+              <div><strong>Finished:</strong> <span class="epoch-time">{{ task.finish_at }}</span></div>
+            {% endif %}
+          </td>
+
+          <td style="padding: 12px 8px; word-break: break-all;">
+            {% if task.status == 'done' %}
+              <span style="font-family: monospace; font-size: 0.8rem; background: #f1f5f9; padding: 2px 4px; border-radius: 4px;">Hash: {{ task.data_hash }}</span>
+            {% elif task.status == 'failed' %}
+              <span style="color: var(--danger); font-size: 0.825rem;">{{ task.error }}</span>
+            {% else %}
+              <span style="color: var(--text-muted); font-style: italic;">In progress...</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" style="padding: 40px; text-align: center; color: var(--text-muted); font-style: italic;">
+            No historical task rows located inside SQLite registry.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function formatTimestamps() {
+    document.querySelectorAll('.epoch-time').forEach(el => {
+      const epochValue = parseFloat(el.innerText);
+      if (isNaN(epochValue)) return;
+
+      const date = new Date(epochValue * 1000);
+      const pad = (num) => String(num).padStart(2, '0');
+      
+      const formatted = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ` +
+                        `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+      
+      el.innerText = formatted;
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    formatTimestamps();
+  });
+</script>
+{% endblock %}

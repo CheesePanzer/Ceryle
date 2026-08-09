@@ -59,3 +59,11 @@ async def verify_api_key(api_key: str = Security(api_key_header)):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or missing API key"
         )
+
+async def require_admin(request: Request):
+    """
+    Dependency for protected admin pages.
+    Redirects to login if not authenticated.
+    """
+    if not request.session.get("authenticated"):
+        raise HTTPException(status_code=303, headers={"Location": "/admin/login"})

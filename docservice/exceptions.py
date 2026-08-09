@@ -12,13 +12,13 @@ class SFileExistsError(ServiceException):
     def __init__(self, file_name: str):
         super().__init__(500, f"File {file_name} Already Exists", 500)
 
+class SFileTypeError(ServiceException):
+    def __init__(self, file_name: str):
+        super().__init__(500, f"File {file_name} Is Not A Docx", 500)
+
 class SFileInvalidOperationError(ServiceException):
     def __init__(self, file_name: str, invalid_operations: str):
         super().__init__(500, f"File {file_name} Doesn't allow {invalid_operations}", 500)
-
-class SFileTypeError(ServiceException):
-    def __init__(self, message: str):
-        super().__init__(500, message, 500)
 
 class SInvalidImageSourceError(ServiceException):
     def __init__(self, source: str, reason: str = "Not a valid base64 data URI or URL"):

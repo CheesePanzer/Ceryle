@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Ceryle Management{% endblock %}
+
+{% block content %}
+<div class="grid-row">
+  <section class="card">
+    <div class="card-header-actions">
+      <h3>Performance Monitor</h3>
+      <button type="button" class="text-btn" onclick="fetchStatus()">Refresh</button>
+    </div>
+    <div class="monitor-container">
+      <div class="status-grid">
+        <div class="status-item">
+          <div class="status-label">Queue Load</div>
+          <div class="status-value" id="stat-queue">- / -</div>
+        </div>
+        <div class="status-item">
+          <div class="status-label">Usage Ratio</div>
+          <div class="status-value" id="stat-ratio">-%</div>
+        </div>
+        <div class="status-item">
+          <div class="status-label">Active Workers</div>
+          <div class="status-value" id="stat-workers">-</div>
+        </div>
+      </div>
+
+      <div class="task-status-section">
+        <div class="task-status-title">Task Distribution States</div>
+        <div class="task-status-row">
+          <div class="task-badge pending">
+            <span class="label">Pending</span>
+            <span class="count" id="task-pending">0</span>
+          </div>
+          <div class="task-badge running">
+            <span class="label">Running</span>
+            <span class="count" id="task-running">0</span>
+          </div>
+          <div class="task-badge done">
+            <span class="label">Valid</span>
+            <span class="count" id="task-done">0</span>
+          </div>
+          <div class="task-badge failed">
+            <span class="label">Failed</span>
+            <span class="count" id="task-failed">0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div style="display: flex; flex-direction: column; gap: 24px;">
+
+    <section class="card" style="height: auto;">
+      <h3>Maintenance Actions</h3>
+      <div class="maintenance-group">
+        <form method="post" action="/admin/cache/clear">
+          <button type="submit" class="secondary">Clear all cache</button>
+        </form>
+        <form method="post" action="/admin/jobs/cleanup-stuck-queue">
+          <button type="submit" class="secondary">Clean Stuck Queue</button>
+        </form>
+        <form method="post" action="/admin/jobs/cleanup-expired-results">
+          <button type="submit" class="secondary">Clean Expired Tasks</button>
+        </form>
+        <form method="post" action="/admin/jobs/cleanup-stuck-processing">
+          <button type="submit" class="secondary">Fail Stuck Tasks</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="card" style="height: auto;">
+  <h3>System Configuration</h3>
+  <div class="config-container">
+
+    <div class="config-row">
+      <span class="config-row-label">Application Profile</span>
+      <span class="config-row-value">{{ config.APP_NAME }} v{{ config.APP_VERSION }} ({{ config.APP_ENV }})</span>
+    </div>
+
+    <div class="config-row">
+      <span class="config-row-label">Queue Capacity Limit</span>
+      <span class="config-row-value mono">{{ config.TASK_QUEUE_SIZE }} slots</span>
+    </div>
+
+    <div class="config-row">
+      <span class="config-row-label">Storage Infrastructure</span>
+      <span class="config-row-value uppercase">
+        {{ config.STORAGE_BACKEND }}
+        {% if config.STORAGE_BACKEND == "s3" %}({{ config.S3_REGION }}){% endif %}
+      </span>
+    </div>
+
+    <div class="cron-schedule-block">
+      <div class="cron-block-title">Automated Cron Schedules</div>
+      <div class="cron-grid">
+        <span class="cron-label">Cache Purge:</span>
+        <span class="cron-value">{{ config.CLEAN_CACHE_CRON }}</span>
+
+        <span class="cron-label">Queue Watchdog:</span>
+        <span class="cron-value">{{ config.CLEAN_STUCK_PENDING }}</span>
+
+        <span class="cron-label">Stuck Worker Failer:</span>
+        <span class="cron-value">{{ config.CLEAN_STUCK_PROCESSING }}</span>
+
+        <span class="cron-label">TTL Result Sweeper:</span>
+        <span class="cron-value">{{ config.CLEAN_EXPIRED_FINISHED }}</span>
+      </div>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-label">Queue Timeout</div>
+        <div class="metric-value">{{ (config.STUCK_QUEUE_SECS / 60) | int }} min</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Result Expiry</div>
+        <div class="metric-value">{{ (config.RESULT_EXPIRY_SECS / 3600) | int }} hours</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  async function fetchStatus() {
+    try {
+      const response = await fetch('/admin/status');
+      if (!response.ok) return;
+      const data = await response.json();
+
+      const qsize = data.queue_size ?? 0;
+      const maxsize = data.max_size ?? 0;
+      const workers = data.workers ?? 0;
+      const taskStatus = data.task_status ?? {};
+
+      const ratio = maxsize > 0 ? Math.round((qsize / maxsize) * 100) : 0;
+
+      const elQueue = document.getElementById('stat-queue');
+      const elRatio = document.getElementById('stat-ratio');
+      const elWorkers = document.getElementById('stat-workers');
+
+      if (elQueue) elQueue.innerHTML = `${qsize} <span class="small">/ ${maxsize}</span>`;
+      if (elRatio) elRatio.innerText = `${ratio}%`;
+      if (elWorkers) elWorkers.innerText = `${workers} Workers`;
+
+      const elPending = document.getElementById('task-pending');
+      const elRunning = document.getElementById('task-running');
+      const elDone = document.getElementById('task-done');
+      const elFailed = document.getElementById('task-failed');
+
+      if (elPending) elPending.innerText = taskStatus.pending ?? 0;
+      if (elRunning) elRunning.innerText = taskStatus.running ?? 0;
+      if (elDone) elDone.innerText = taskStatus.done ?? 0;
+      if (elFailed) elFailed.innerText = taskStatus.failed ?? 0;
+
+    } catch (error) {
+      console.error('Failed to parse remote status block:', error);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    fetchStatus();
+    setInterval(fetchStatus, 5000);
+  });
+</script>
+{% endblock %}

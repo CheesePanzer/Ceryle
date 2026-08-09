@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Ceryle Management{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h2>Ceryle Admin</h2>
+
+      <nav class="nav-bar">
+        <a href="/admin" class="nav-item" id="nav-dashboard">Dashboard</a>
+        <a href="/admin/templates" class="nav-item" id="nav-templates">Templates</a>
+        <a href="/admin/tasks" class="nav-item" id="nav-tasks">Tasks</a>
+      </nav>
+
+      <div class="header-right">
+        <a href="/admin/change-password" class="logout-btn">Change Password</a>
+        <a href="/admin/logout" class="logout-btn">Logout</a>
+      </div>
+    </header>
+
+  {% for f in flashes %}
+    <div class="{{ f.category }}">
+      <span>{{ f.text }}</span>
+      <button type="button" class="close-flash" onclick="this.parentElement.remove()">&times;</button>
+    </div>
+  {% endfor %}
+
+    <main>
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <script>
+    function initNavbar() {
+      const path = window.location.pathname;
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+      if (path === '/admin/templates') {
+        const el = document.getElementById('nav-templates');
+        if (el) el.classList.add('active');
+      } else if (path === '/admin/tasks') {
+        const el = document.getElementById('nav-tasks');
+        if (el) el.classList.add('active');
+      } else if (path === '/admin' || path === '/admin/') {
+        const el = document.getElementById('nav-dashboard');
+        if (el) el.classList.add('active');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', initNavbar);
+  </script>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

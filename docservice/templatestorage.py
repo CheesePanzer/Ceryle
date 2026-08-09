@@ -61,7 +61,7 @@ class LocalTemplateStorage:
         path = self._path(clean_name)
 
         if os.path.exists(path) and not overwrite:
-            raise SFileInvalidOperationError(clean_name, "overwrite")
+            raise FileExistsError(f"File {clean_name} already exists")
 
         with open(path, "wb") as f:
             f.write(content)

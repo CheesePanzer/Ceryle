@@ -1,0 +1,63 @@
+name: Build Ceryle Docker Image And Push Ghcr
+
+# ==========================
+# Project Configuration
+# ==========================
+env:
+  REGISTRY_OWNER: cheesepanzer
+  IMAGE_NAME: ceryle
+  DOCKERFILE_PATH: Dockerfile
+  BUILD_CONTEXT_PATH: .
+  DOCKER_PLATFORM: linux/amd64
+
+on:
+  workflow_dispatch:
+
+# ==========================
+# Workflow
+# ==========================
+jobs:
+  docker-build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout current branch
+        uses: actions/checkout@v4
+
+      - name: Set sanitized branch name
+        id: vars
+        shell: bash
+        run: |
+          TARGET_BRANCH="${{ github.ref_name }}"
+          BRANCH_NAME=${TARGET_BRANCH//\//-}
+          echo "branch_name=$BRANCH_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: |
+          IMAGE_TAG=ghcr.io/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.branch_name }}
+
+          docker build \
+            --platform ${{ env.DOCKER_PLATFORM }} \
+            -t $IMAGE_TAG \
+            -f ${{ env.DOCKERFILE_PATH }} \
+            ${{ env.BUILD_CONTEXT_PATH }}
+
+      - name: Push Docker image
+        run: |
+          IMAGE_TAG=ghcr.io/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.branch_name }}
+
+          docker push $IMAGE_TAG

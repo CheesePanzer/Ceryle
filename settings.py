@@ -1,25 +1,31 @@
-APP_NAME:str = "Ceryle"
+import os
 
-APP_VERSION:str = "1.0.0"
+APP_NAME: str = os.getenv("APP_NAME", "Ceryle")
 
-APP_ENV:str = "development"
+APP_VERSION: str = os.getenv("APP_VERSION", "1.0.0")
 
-API_KEY:str = "123456"
+APP_ENV: str = os.getenv("APP_ENV", "development")
 
-WORKER_COUNT: int = 1
+API_KEY: str = os.getenv("API_KEY", "123456")
 
-PROCESS_POOL_SIZE: int = 4
+WORKER_COUNT: int = int(os.getenv("WORKER_COUNT", "1"))
 
-TASK_QUEUE_SIZE: int = 50
+PROCESS_POOL_SIZE: int = int(os.getenv("PROCESS_POOL_SIZE", "4"))
 
-CLEAN_CACHE_CRON: str = "0 3 * * *"
+TASK_QUEUE_SIZE: int = int(os.getenv("TASK_QUEUE_SIZE", "50"))
 
-CLEAN_STUCK_PENDING: str = "*/10 * * * *"
+CLEAN_CACHE_CRON: str = os.getenv("CLEAN_CACHE_CRON", "0 3 * * *")
 
-CLEAN_STUCK_PROCESSING: str = "*/10 * * * *"
+CLEAN_STUCK_PENDING: str = os.getenv("CLEAN_STUCK_PENDING", "*/10 * * * *")
 
-CLEAN_EXPIRED_FINISHED: str = "0 3 * * *"
+CLEAN_STUCK_PROCESSING: str = os.getenv("CLEAN_STUCK_PROCESSING", "*/10 * * * *")
 
-SESSION_SECRET: str = "syh123456"
+CLEAN_EXPIRED_FINISHED: str = os.getenv("CLEAN_EXPIRED_FINISHED", "0 3 * * *")
 
-SESSION_MAX_AGE_SECS: int | None = None
+SESSION_SECRET: str = os.getenv("SESSION_SECRET", "123456")
+
+SESSION_MAX_AGE_SECS: int | None = (
+    int(os.environ["SESSION_MAX_AGE_SECS"])
+    if os.getenv("SESSION_MAX_AGE_SECS") is not None
+    else None
+)

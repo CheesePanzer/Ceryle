@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Runtime data
+*.db
+*.db-shm
+*.db-wal
+cache/
+logs/
+result/
+
+# Local environment files
+.env
+.env.*
+!.env.example

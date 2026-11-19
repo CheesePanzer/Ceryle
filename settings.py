@@ -1,12 +1,19 @@
 import os
 
+
+def require_env(name: str) -> str:
+    value = os.getenv(name)
+    if value is None or not value.strip():
+        raise RuntimeError(f"Required environment variable {name} is not set")
+    return value
+
 APP_NAME: str = os.getenv("APP_NAME", "Ceryle")
 
 APP_VERSION: str = os.getenv("APP_VERSION", "1.0.0")
 
 APP_ENV: str = os.getenv("APP_ENV", "development")
 
-API_KEY: str = os.getenv("API_KEY", "123456")
+API_KEY: str = require_env("API_KEY")
 
 WORKER_COUNT: int = int(os.getenv("WORKER_COUNT", "1"))
 
@@ -22,7 +29,7 @@ CLEAN_STUCK_PROCESSING: str = os.getenv("CLEAN_STUCK_PROCESSING", "*/10 * * * *"
 
 CLEAN_EXPIRED_FINISHED: str = os.getenv("CLEAN_EXPIRED_FINISHED", "0 3 * * *")
 
-SESSION_SECRET: str = os.getenv("SESSION_SECRET", "123456")
+SESSION_SECRET: str = require_env("SESSION_SECRET")
 
 SESSION_MAX_AGE_SECS: int | None = (
     int(os.environ["SESSION_MAX_AGE_SECS"])

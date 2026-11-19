@@ -227,7 +227,7 @@ Admin 后台位于 `/admin` 路径下，提供 Web 界面进行可视化管理�
 | `APP_NAME` | `Ceryle` | 服务名称 |
 | `APP_VERSION` | `1.0.0` | 服务版本 |
 | `APP_ENV` | `development` | 运行环境（`development` 时开启 Swagger 文档） |
-| `API_KEY` | — | API 认证密钥 |
+| `API_KEY` | 必填 | API 认证密钥；未设置或为空时服务拒绝启动 |
 | `WORKER_COUNT` | `1` | 异步渲染 Worker 协程数 |
 | `TASK_QUEUE_SIZE` | `50` | 任务队列最大长度，超限返回 429 |
 | `STORAGE_BACKEND` | `local` | 模板存储后端：`local` 或 `s3` |
@@ -236,7 +236,7 @@ Admin 后台位于 `/admin` 路径下，提供 Web 界面进行可视化管理�
 | `RESULT_DIR` | `result` | 异步任务结果目录 |
 | `IMAGE_FETCH_TIMEOUT` | `2` | 远程图片拉取超时（秒） |
 | `ALLOWED_IMAGE_DOMAINS` | `[]`（不限制） | 远程图片域名白名单 |
-| `SESSION_SECRET` | — | 管理后台 Session 密钥 |
+| `SESSION_SECRET` | 必填 | 管理后台 Session 密钥；未设置或为空时服务拒绝启动 |
 | `SESSION_MAX_AGE_SECS` | — | 管理后台 Session 有效期 |
 
 ### 定时清理配置

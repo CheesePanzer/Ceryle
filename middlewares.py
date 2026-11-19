@@ -1,4 +1,5 @@
-# exception_handlers.py
+import hmac
+
 from fastapi.security import APIKeyHeader
 from starlette import status
 from starlette.requests import Request
@@ -54,7 +55,7 @@ api_key_header = APIKeyHeader(name="X-Api-Key", auto_error=False)
 
 
 async def verify_api_key(api_key: str = Security(api_key_header)):
-    if not api_key or api_key not in API_KEY:
+    if not api_key or not hmac.compare_digest(api_key.encode(), API_KEY.encode()):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or missing API key"

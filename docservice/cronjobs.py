@@ -15,8 +15,8 @@ def cleanup_cache_job(file_svc, logger):
 async def cleanup_stuck_queue_job(task_mgr, logger):
     """
     Tasks that sat in 'pending' too long without ever being picked up.
-    No result directory expected (created just before enqueue), but
-    cleanup is left to cleanup_expired_results_job once marked failed.
+    The result directory is created before enqueue; cleanup is left to
+    cleanup_expired_results_job once the task is marked failed.
     """
     stuck_ids = await task_mgr.get_stuck_in_queue_task_ids(STUCK_QUEUE_SECS)
     for tid in stuck_ids:

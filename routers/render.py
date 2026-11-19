@@ -39,15 +39,17 @@ async def generate_docx(template_name: str, req: DataRequest):
 @render_router.post("/task/{template_name}", summary="Create a task of rendering a template")
 async def create_render_task(template_name: str, req: DataRequest) -> str:
     task_id = uuid.uuid4()
-    await task_mgr.create_task(task_id, template_name, req.expectName)
     try:
-        render_queue.put_nowait(RenderJob(task_id, template_name, req))
+        await task_mgr.create_task(task_id, template_name, req.expectName or template_name)
         await file_svc.create_new_task_result_dir(task_id, template_name)
+        render_queue.put_nowait(RenderJob(task_id, template_name, req))
     except asyncio.QueueFull:
         await task_mgr.delete_task(task_id)
+        file_svc.delete_task_result_dir(task_id)
         raise HTTPException(status_code=429, detail="Server busy, please retry later")
     except Exception:
         await task_mgr.delete_task(task_id)
+        file_svc.delete_task_result_dir(task_id)
         raise
     return str(task_id)
 

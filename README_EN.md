@@ -227,7 +227,7 @@ The admin dashboard is available at `/admin` and provides a web-based interface 
 | `APP_NAME` | `Ceryle` | Service name |
 | `APP_VERSION` | `1.0.0` | Service version |
 | `APP_ENV` | `development` | Runtime environment (Swagger docs enabled in `development`) |
-| `API_KEY` | — | API authentication key |
+| `API_KEY` | Required | API authentication key; the service refuses to start if unset or empty |
 | `WORKER_COUNT` | `1` | Number of async render worker coroutines |
 | `TASK_QUEUE_SIZE` | `50` | Maximum task queue length; returns 429 when exceeded |
 | `STORAGE_BACKEND` | `local` | Template storage backend: `local` or `s3` |
@@ -236,7 +236,7 @@ The admin dashboard is available at `/admin` and provides a web-based interface 
 | `RESULT_DIR` | `result` | Async task result directory |
 | `IMAGE_FETCH_TIMEOUT` | `2` | Remote image fetch timeout (seconds) |
 | `ALLOWED_IMAGE_DOMAINS` | `[]` (unrestricted) | Remote image domain allowlist |
-| `SESSION_SECRET` | — | Admin dashboard session secret |
+| `SESSION_SECRET` | Required | Admin dashboard session secret; the service refuses to start if unset or empty |
 | `SESSION_MAX_AGE_SECS` | — | Admin dashboard session expiry |
 
 ### Scheduled Cleanup

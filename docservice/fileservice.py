@@ -1,6 +1,7 @@
 import json
 import hashlib
 import os
+import shutil
 import uuid
 from dataclasses import dataclass
 from io import BytesIO
@@ -110,6 +111,9 @@ class FileService:
         if not await self.template_storage.exists(tpl_name):
             raise SFileNotFoundError(tpl_name)
         os.makedirs(os.path.join(self.result_dir, str(task_id)))
+
+    def delete_task_result_dir(self, task_id: uuid.UUID) -> None:
+        shutil.rmtree(os.path.join(self.result_dir, str(task_id)), ignore_errors=True)
 
     async def get_result_file_path(self, task_id: uuid.UUID) -> str:
         """
